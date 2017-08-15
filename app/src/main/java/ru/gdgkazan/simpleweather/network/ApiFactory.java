@@ -19,7 +19,10 @@ public final class ApiFactory {
     private static OkHttpClient sClient;
 
     private static volatile WeatherService sService;
-    private static volatile CityListSevice cityListSevice;
+
+    public static final int CITY_LIST = 0;
+    public static final int WEATHER_OF_CITY = 1;
+
 
     private ApiFactory() {
     }
@@ -39,13 +42,20 @@ public final class ApiFactory {
     }
 
     @NonNull
-    public static CityListSevice getCityListService() {
-        CityListSevice service = cityListSevice;
+    public static WeatherService getWeatherService(int param) {
+        WeatherService service = sService;
         if (service == null) {
             synchronized (ApiFactory.class) {
-                service = cityListSevice;
+                service = sService;
                 if (service == null) {
-                    service = cityListSevice = buildCityList().create(CityListSevice.class);
+                    switch (param){
+                        case CITY_LIST:
+                            service = sService = buildCityList().create(WeatherService.class);
+                            break;
+                        case WEATHER_OF_CITY:
+                            service = sService = buildRetrofit().create(WeatherService.class);
+                            break;
+                    }
                 }
             }
         }

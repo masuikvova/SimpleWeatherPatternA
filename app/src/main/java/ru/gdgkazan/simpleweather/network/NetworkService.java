@@ -71,7 +71,7 @@ public class NetworkService extends IntentService {
 
     private void executeCityRequest(@NonNull Request request, @NonNull String cityName) {
         try {
-            City city = ApiFactory.getWeatherService()
+            City city = ApiFactory.getWeatherService(ApiFactory.WEATHER_OF_CITY)
                     .getWeather(cityName)
                     .execute()
                     .body();
@@ -89,7 +89,7 @@ public class NetworkService extends IntentService {
 
     private void executeCityList(@NonNull Request request) {
         try {
-            List<WeatherCity> cities = ApiFactory.getCityListService()
+            List<WeatherCity> cities = ApiFactory.getWeatherService(ApiFactory.CITY_LIST)
                     .getCityList()
                     .execute()
                     .body();
