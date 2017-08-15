@@ -65,14 +65,13 @@ public class WeatherListActivity extends AppCompatActivity implements CitiesAdap
         mAdapter = new CitiesAdapter(null, this);
         mRecyclerView.setAdapter(mAdapter);
         mLoadingView = LoadingDialog.view(getSupportFragmentManager());
-
         loadCityList();
         /**
          * TODO : task
          *
-         * 1) Load all cities (pair id-name) if WeatherCityTable is empty from http://openweathermap.org/help/city_list.txt
-         * and save them to database
-         * 2) Using the information from the first step find id for each current city
+         *  +   1) Load all cities (pair id-name) if WeatherCityTable is empty from http://openweathermap.org/help/city_list.txt
+         *          and save them to database
+         *  +   2) Using the information from the first step find id for each current city
          * 3) Load forecast in all cities using one single request http://openweathermap.org/current#severalid
          * 4) Do all this work in NetworkService (you need to modify it to better support multiple requests)
          * 5) Use SQLite API to manage communication
