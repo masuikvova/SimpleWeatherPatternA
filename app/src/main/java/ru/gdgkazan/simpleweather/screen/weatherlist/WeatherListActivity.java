@@ -10,8 +10,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
 
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
+
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -24,9 +26,7 @@ import ru.gdgkazan.simpleweather.R;
 import ru.gdgkazan.simpleweather.data.model.WeatherCity;
 import ru.gdgkazan.simpleweather.data.tables.RequestTable;
 import ru.gdgkazan.simpleweather.data.tables.WeatherCityTable;
-import ru.gdgkazan.simpleweather.network.NetworkService;
 import ru.gdgkazan.simpleweather.network.model.NetworkRequest;
-import ru.gdgkazan.simpleweather.network.model.Request;
 import ru.gdgkazan.simpleweather.network.model.RequestStatus;
 import ru.gdgkazan.simpleweather.screen.general.LoadingDialog;
 import ru.gdgkazan.simpleweather.screen.general.LoadingView;
@@ -53,6 +53,8 @@ public class WeatherListActivity extends AppCompatActivity implements CitiesAdap
 
     private LoadingView mLoadingView;
 
+    private static final int LOADER_ID = 1;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,9 +75,9 @@ public class WeatherListActivity extends AppCompatActivity implements CitiesAdap
          *          and save them to database
          *  +   2) Using the information from the first step find id for each current city
          * 3) Load forecast in all cities using one single request http://openweathermap.org/current#severalid
-         * 4) Do all this work in NetworkService (you need to modify it to better support multiple requests)
-         * 5) Use SQLite API to manage communication
-         * 6) Handle configuration changes
+         *  +   4) Do all this work in NetworkService (you need to modify it to better support multiple requests)
+         *  +   5) Use SQLite API to manage communication
+         *  +   6) Handle configuration changes
          * 7) Modify all the network layer to create a universal way for managing queries with pattern A
          */
     }
@@ -86,24 +88,11 @@ public class WeatherListActivity extends AppCompatActivity implements CitiesAdap
     }
 
     private void loadCityList() {
-        mLoadingView.showLoadingIndicator();
-        RxSQLite.get().query(WeatherCityTable.TABLE)
-                .compose(RxSchedulers.async())
-                .subscribe(cities -> {
-                    if (cities.size() > 0) {
-                        showList(cities);
-                        mLoadingView.hideLoadingIndicator();
-                    }else
-                        startService();
-                },throwable -> {
-                    startService();
-                });
-    }
-
-    private void startService() {
         SQLite.get().registerObserver(RequestTable.TABLE, this);
-        Request request = new Request(NetworkRequest.CITY_LIST);
-        NetworkService.start(this, request);
+        mLoadingView.showLoadingIndicator();
+
+        LoaderManager.LoaderCallbacks<List<WeatherCity>> callbacks = new WeatherCallbacks();
+        getSupportLoaderManager().initLoader(LOADER_ID, Bundle.EMPTY, callbacks);
     }
 
     @Override
@@ -136,6 +125,25 @@ public class WeatherListActivity extends AppCompatActivity implements CitiesAdap
     private void showList(List<WeatherCity> data) {
         if (data != null) {
             mAdapter.changeDataSet(data);
+        }
+    }
+
+    private class WeatherCallbacks implements LoaderManager.LoaderCallbacks<List<WeatherCity>> {
+
+        @Override
+        public Loader<List<WeatherCity>> onCreateLoader(int id, Bundle args) {
+            return  new CitiesLoader(WeatherListActivity.this);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<List<WeatherCity>> loader, List<WeatherCity> data) {
+            showList(data);
+            mLoadingView.hideLoadingIndicator();
+        }
+
+        @Override
+        public void onLoaderReset(Loader<List<WeatherCity>> loader) {
+
         }
     }
 }
